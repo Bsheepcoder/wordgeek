@@ -1,4 +1,4 @@
-## 版本
+## 当前版本
 
 0.0.4
 
@@ -22,8 +22,15 @@
 
 - 目前仅支持查单词的释义
 
-## 更新
 
-0.0.3 完成基本功能
+## 开发文档
 
-0.0.4 开启代理也能正常使用
+```shell
+# To activate this environment, use                                                
+$ conda activate ./envs/wk
+             
+
+# To deactivate an active environment, use
+$ conda deactivate
+```
+

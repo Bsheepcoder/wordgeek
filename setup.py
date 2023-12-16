@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="wordgeek",  # 项目名称，保证它的唯一性，不要跟已存在的包名冲突即可
+    name="src",  # 项目名称，保证它的唯一性，不要跟已存在的包名冲突即可
     version="0.0.4",  # 程序版本
     author="Husile",  # 项目作者
     author_email="18947336207@163.com",  # 作者邮件
