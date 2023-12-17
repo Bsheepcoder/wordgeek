@@ -10,7 +10,7 @@ import time, threading
 console = Console()
 
 
-class Soup:
+class WordGeek:
     # 参数设置
     def __init__(self, w):
         self.url = 'https://dict.youdao.com/search?q=' + w + '&keyfrom=new-fanyi.smartResult'
@@ -21,6 +21,13 @@ class Soup:
         self.proxy = {"http": None, "https": None}
         self.soup = self.request()
 
+        # 结果：
+        self.keyword = ""
+        self.pronounce = ""
+        self.change = ""
+        self.meaning = ""
+        self.englishMeaning = ""
+
     def request(self):
         # 发起请求
         urllib3.disable_warnings()  # 忽略证书验证警告
@@ -29,64 +36,84 @@ class Soup:
         # 获取网页对象
         return soup
 
+    def getKeyWord(self):
+        kl = self.soup.find_all('span', {"class": "keyword"})
+        if len(kl) >= 1:
+            self.keyword = kl[0].string
 
-def getKeyWord(soup):
-    return soup.find_all('span', {"class": "keyword"})[0].string
+    def getPronounce(self):
+        res = ""
+        tag = self.soup.find_all('span', {"class": "pronounce"})
+        if len(tag) >= 2:
+            tag_uk = tag[0].strings
+            tag_us = tag[1].strings
+            for i in tag_uk:
+                res += i.strip()
+            res += "  "
+            for i in tag_us:
+                res += i.strip()
+            self.pronounce = res
 
+    def getChange(self):
+        res = ""
+        tl = self.soup.find_all('p', {"class": "additional"})
+        if len(tl) >= 1:
+            tag = tl[0].get_text().strip().split("\n")
+            for i in tag:
+                res += i.strip() + " "
+            self.change = res
 
-def getPronounce(soup):
-    res = ""
-    tag = soup.find_all('span', {"class": "pronounce"})
-    tag_uk = tag[0].strings
-    tag_us = tag[1].strings
-    phonetic = soup.find_all('span', {"class": "phonetic"})
-    for i in tag_uk:
-        res += i.strip()
-    res += "  "
-    for i in tag_us:
-        res += i.strip()
-    return res
+    def getMeaning(self):
+        res = ""
+        count = 0
+        m = self.soup.find("ul").children
+        for i in m:
+            s = i.string
+            if count == 0:  # 去除换行
+                pass
+            elif count == 1:
+                s = s.split("；")
+                for i in range(0, int(len(s) / 2)):
+                    res += s[i]
+            else:
+                res += s
+            count += 1
+        self.meaning = res.strip()
 
-def getChange(soup):
-    res = ""
-    tag = soup.find_all('p', {"class": "additional"})[0].get_text().strip().split("\n")
-    for i in tag:
-        res += i.strip() + " "
-    return res
+    def getEnglishMeaning(self):
+        res = ""
+        phrases = self.soup.find_all('div', {"class": "trans-container"})
 
-def getMeaning(soup):
-    res = ""
-    count = 0
-    m = soup.find("ul").children
-    for i in m:
-        s = i.string
-        if count == 0:  # 去除换行
-            pass
-        elif count == 1:
-            s = s.split("；")
-            for i in range(0, 4):
-                res += s[i]
-        else:
-            res += s
-        count += 1
-    return res.strip()
-
-
-def getPhrases(soup):
-    res = ""
-    phrases = soup.find('ul', {"class": "ol"}).contents[1].get_text().strip().replace('/n', '')
-    return phrases
+    def threadGet(self):
+        t1 = threading.Thread(target=self.getKeyWord())
+        t2 = threading.Thread(target=self.getPronounce())
+        t3 = threading.Thread(target=self.getChange())
+        t4 = threading.Thread(target=self.getMeaning())
+        t1.start()
+        t2.start()
+        t3.start()
+        t4.start()
 
 
 # word = sys.argv[1]
-soup = Soup("word").soup
-print(getKeyWord(soup))
-print(getPronounce(soup))
-print(getMeaning(soup))
-print(getChange(soup))
-print(getPhrases(soup))
+test = ["geek", "anaconda", "get", "somebody", "again", "time", "main", "youdao"]
+for t in test:
+    print("====================================")
+    wk = WordGeek(t)
+    wk.threadGet()
+    print(wk.keyword)
+    print(wk.pronounce)
+    print(wk.meaning)
+    print(wk.change)
 
-
+#
+# wk = WordGeek("anaconda")
+# wk.threadGet()
+# print(wk.keyword)
+# print(wk.pronounce)
+# print(wk.meaning)
+# print(wk.change)
+# print(wk.englishMeaning)
 
 # 获取网页结果
 # 判断输入是否正确
