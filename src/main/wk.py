@@ -6,6 +6,7 @@ import urllib3
 import requests
 import sys
 import time, threading
+import sqlite3
 
 console = Console()
 
@@ -96,24 +97,37 @@ class WordGeek:
 
 
 # word = sys.argv[1]
-test = ["geek", "anaconda", "get", "somebody", "again", "time", "main", "youdao"]
-for t in test:
-    print("====================================")
-    wk = WordGeek(t)
-    wk.threadGet()
-    print(wk.keyword)
-    print(wk.pronounce)
-    print(wk.meaning)
-    print(wk.change)
+# test = ["geek", "anaconda", "get", "somebody", "again", "time", "main", "youdao"]
+# for t in test:
+#     print("====================================")
+#     wk = WordGeek(t)
+#     wk.threadGet()
+#     print(wk.keyword + "|")
+#     print(wk.pronounce + "|")
+#     print(wk.meaning+ "|")
+#     print(wk.change+ "|")
+insert_template = "insert into words(word,pronounce,meaning,change) Values ('{keyword}','{pronounce}','{meaning}','{change}')"
 
-#
-# wk = WordGeek("anaconda")
-# wk.threadGet()
-# print(wk.keyword)
-# print(wk.pronounce)
-# print(wk.meaning)
-# print(wk.change)
-# print(wk.englishMeaning)
+
+conn = sqlite3.connect("word.db")
+with open('file01.txt', 'r') as f:
+    cur = conn.cursor()  # 通过建立数据库游标对象，准备读写操作
+    for i in f:
+        wk = WordGeek(i.strip())
+        wk.threadGet()
+        data = {
+            'keyword': f'{wk.keyword}',
+            'pronounce': f'{wk.pronounce}',
+            'meaning': f'{wk.meaning}',
+            'change': f'{wk.change}',
+        }
+        insert_statement = insert_template.format(**data)
+        cur.execute(insert_statement)
+        conn.commit()  # 保存提交，确保数据保存成功
+        time.sleep(1000)
+    conn.close()  # 关闭与数据库的连接
+
+
 
 # 获取网页结果
 # 判断输入是否正确
