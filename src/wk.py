@@ -62,7 +62,8 @@ class WordGeek:
             tag = tl[0].get_text().strip().split("\n")
             for i in tag:
                 res += i.strip() + " "
-            self.change = res
+            if res[0] == '[':
+                self.change = res
 
     def getMeaning(self):
         res = ""
@@ -73,7 +74,6 @@ class WordGeek:
                 s = i.string
                 if s != '\n':
                     sl = s.split("；")
-                    print(sl)
                     l = len(sl)
                     if l > 3:
                         for i in range(3):
@@ -84,7 +84,6 @@ class WordGeek:
                     res += '\n'
                 count += 1
             self.meaning = res.strip()
-
 
     def getEnglishMeaning(self):
         res = ""
@@ -101,42 +100,20 @@ class WordGeek:
         t4.start()
 
 
-word = sys.argv[1]
-wk = WordGeek(word)
-wk.threadGet()
-print(1)
-if wk.keyword != word:
-    console.print("Not find, try another word")
-else:
-    console.print("* " + wk.keyword, style="rgb(236,125,225)")  # 紫
-    console.print(wk.pronounce, style="rgb(169,66,34)")  # 红
-    console.print(wk.meaning, style="rgb(105,170,102)")  # 绿
-    console.print(wk.change, style="rgb(55,95,173)") # 蓝
+word = ""
+for i in range(1, len(sys.argv)):
+    word += sys.argv[i] + " "
 
-# 获取网页结果
-# 判断输入是否正确
-# wordCorrect = soup.find_all('span', {"class": "keyword"})
-# if wordCorrect:
-#     # 输出所查单词
-#     console.print("【" + word + "】", style="rgb(255,237,204)")
-#
-#     # 单词意思
-#     wordMean_div = soup.find_all('div', {"class": "trans-container"})
-#     wordMeanSoup = BeautifulSoup(str(wordMean_div[0]), 'html.parser')
-#     wordMeanList = wordMeanSoup.find_all('li')
-#
-#     # 获取例句
-#     wordSt = soup.find_all('div', {"class": "trans-container"})
-#
-#     # 输出
-#     # 输出是倒叙的 释义-->单词
-#     # 输出释义
-#     for i in range(0, len(wordMeanList)):
-#         m = wordMeanList[i].text.split('；')
-#         # print(m)
-#         if len(m) > 1:
-#             console.print(" " + m[0], m[1], style="rgb(236,125,225)")
-#         else:
-#             console.print(" " + m[0].replace(" ", ""), style="rgb(236,125,225)")
-# else:
-#     console.print("没有找到这个单词！", style="bold red")
+wk = WordGeek(word.strip())
+wk.threadGet()
+if wk.keyword:
+    console.print("* " + wk.keyword, style="rgb(236,125,225)")  # 紫
+    if wk.pronounce != "":
+        console.print(wk.pronounce, style="rgb(169,66,34)")  # 红
+    if wk.meaning != "":
+        console.print(wk.meaning, style="rgb(105,170,102)")  # 绿
+    if wk.change != "":
+        console.print(wk.change, style="rgb(55,95,173)")  # 蓝
+else:
+    console.print("Not find, try another word")
+
