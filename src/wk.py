@@ -67,19 +67,24 @@ class WordGeek:
     def getMeaning(self):
         res = ""
         count = 0
-        m = self.soup.find("ul").children
-        for i in m:
-            s = i.string
-            if count == 0:  # 去除换行
-                pass
-            elif count == 1:
-                s = s.split("；")
-                for i in range(0, int(len(s) / 2)):
-                    res += s[i]
-            else:
-                res += s
-            count += 1
-        self.meaning = res.strip()
+        m = self.soup.find("ul")
+        if m is not None:
+            for i in m.children:
+                s = i.string
+                if s != '\n':
+                    sl = s.split("；")
+                    print(sl)
+                    l = len(sl)
+                    if l > 3:
+                        for i in range(3):
+                            res += sl[i].replace('\n', '')
+                    else:
+                        for i in range(l):
+                            res += sl[i].replace('\n', '')
+                    res += '\n'
+                count += 1
+            self.meaning = res.strip()
+
 
     def getEnglishMeaning(self):
         res = ""
@@ -96,38 +101,17 @@ class WordGeek:
         t4.start()
 
 
-# word = sys.argv[1]
-# test = ["geek", "anaconda", "get", "somebody", "again", "time", "main", "youdao"]
-# for t in test:
-#     print("====================================")
-#     wk = WordGeek(t)
-#     wk.threadGet()
-#     print(wk.keyword + "|")
-#     print(wk.pronounce + "|")
-#     print(wk.meaning+ "|")
-#     print(wk.change+ "|")
-insert_template = "insert into words(word,pronounce,meaning,change) Values ('{keyword}','{pronounce}','{meaning}','{change}')"
-
-
-conn = sqlite3.connect("word.db")
-with open('file01.txt', 'r') as f:
-    cur = conn.cursor()  # 通过建立数据库游标对象，准备读写操作
-    for i in f:
-        wk = WordGeek(i.strip())
-        wk.threadGet()
-        data = {
-            'keyword': f'{wk.keyword}',
-            'pronounce': f'{wk.pronounce}',
-            'meaning': f'{wk.meaning}',
-            'change': f'{wk.change}',
-        }
-        insert_statement = insert_template.format(**data)
-        cur.execute(insert_statement)
-        conn.commit()  # 保存提交，确保数据保存成功
-        time.sleep(1000)
-    conn.close()  # 关闭与数据库的连接
-
-
+word = sys.argv[1]
+wk = WordGeek(word)
+wk.threadGet()
+print(1)
+if wk.keyword != word:
+    console.print("Not find, try another word")
+else:
+    console.print("* " + wk.keyword, style="rgb(236,125,225)")  # 紫
+    console.print(wk.pronounce, style="rgb(169,66,34)")  # 红
+    console.print(wk.meaning, style="rgb(105,170,102)")  # 绿
+    console.print(wk.change, style="rgb(55,95,173)") # 蓝
 
 # 获取网页结果
 # 判断输入是否正确
