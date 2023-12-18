@@ -72,7 +72,7 @@ class WordGeek:
         if m is not None:
             for i in m.children:
                 s = i.string
-                if s != '\n':
+                if s != '\n' and s is not None:
                     sl = s.split("；")
                     l = len(sl)
                     if l > 3:
@@ -102,6 +102,7 @@ class WordGeek:
 
 word = ""
 for i in range(1, len(sys.argv)):
+    print(sys.argv[i])
     word += sys.argv[i] + " "
 
 wk = WordGeek(word.strip())
