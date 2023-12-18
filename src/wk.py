@@ -5,8 +5,7 @@ from rich.console import Console
 import urllib3
 import requests
 import sys
-import time, threading
-import sqlite3
+import threading
 
 
 class WordGeek:
