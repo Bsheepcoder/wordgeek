@@ -25,6 +25,8 @@
 
 ## 开发文档
 
+虚拟环境配置
+
 ```shell
 # To activate this environment, use                                                
 $ conda activate ./envs/wk
@@ -33,4 +35,7 @@ $ conda activate ./envs/wk
 # To deactivate an active environment, use
 $ conda deactivate
 ```
-
+打包
+```shell
+Pyinstaller -F ./wk.py     
+```
