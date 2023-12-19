@@ -1,7 +1,13 @@
 # -*- coding: utf-8 -*-
 # !/usr/bin/python
+import time
+from functools import lru_cache
+
 from bs4 import BeautifulSoup
 from rich.console import Console
+from rich.pretty import pprint
+from rich import print
+from rich.layout import Layout
 import urllib3
 import requests
 import sys
@@ -35,11 +41,13 @@ class WordGeek:
         # 获取网页对象
         return soup
 
+    @lru_cache
     def getKeyWord(self):
         kl = self.soup.find_all('span', {"class": "keyword"})
         if len(kl) >= 1:
             self.keyword = kl[0].string
 
+    @lru_cache
     def getPronounce(self):
         res = ""
         tag = self.soup.find_all('span', {"class": "pronounce"})
@@ -51,8 +59,10 @@ class WordGeek:
             res += "  "
             for i in tag_us:
                 res += i.strip()
-            self.pronounce = res
+            if len(res) > 16:
+                self.pronounce = res
 
+    @lru_cache
     def getChange(self):
         res = ""
         tl = self.soup.find_all('p', {"class": "additional"})
@@ -63,6 +73,7 @@ class WordGeek:
             if res[0] == '[':
                 self.change = res
 
+    @lru_cache
     def getMeaning(self):
         res = ""
         count = 0
@@ -130,18 +141,19 @@ class WordGeekChinese:
         if len(kl) >= 1:
             self.keyword = kl[0].string
 
-    def getPronounce(self):
+    @lru_cache
+    def getMeaning(self):
         res = ""
         tag = self.soup.find_all('p', {"class": "wordGroup"})
         lt = len(tag)
         if lt > 0:
             for i in tag[0].strings:
                 res += i.strip()
-            self.pronounce = res.replace(";", "  ")
+            self.meaning = res.replace(";", " | ")
 
     def threadGet(self):
         t1 = threading.Thread(target=self.getKeyWord())
-        t2 = threading.Thread(target=self.getPronounce())
+        t2 = threading.Thread(target=self.getMeaning())
         t1.start()
         t2.start()
 
@@ -174,8 +186,8 @@ class Main:
                     self.printAll(wk)
                 else:
                     self.printNull()
-        sys.exit()
 
+    @lru_cache
     def getInput(self):
         word = ""
         if len(sys.argv) > 0:
@@ -185,18 +197,18 @@ class Main:
                 word += sys.argv[i] + " "
         return word.strip()
 
+    # 黄 rgb(237,247,75)
+    # 紫 rgb(236,125,225)
+    # 红 rgb(169,66,34)
+    # 绿 rgb(105,170,102)
+    # 深蓝 rgb(55,95,173)
+    # 浅蓝 rgb(112,174,255)
+    # 橘 rgb(252,154,3)
     def printAll(self, wk):
-        # 黄 rgb(237,247,75)
-        # 紫 rgb(236,125,225)
-        # 红 rgb(169,66,34)
-        # 绿 rgb(105,170,102)
-        # 深蓝 rgb(55,95,173)
-        # 浅蓝 rgb(112,174,255)
-        # 橘 rgb(252,154,3)
-
         self.console.print("* " + wk.keyword, style="rgb(252,154,3)")
         if wk.pronounce != "":
-            self.console.print(wk.pronounce, style="rgb(105,170,102)")
+            print(wk.pronounce)
+            # self.console.print("* " + wk.pronounce, style="rgb(105,170,102)")
         if wk.meaning != "":
             self.console.print(wk.meaning, style="rgb(236,125,225)")
         if wk.change != "":
@@ -209,4 +221,9 @@ class Main:
         self.console.print("Not find, try another word")
 
 
+start = time.time()
 m = Main()
+end = time.time()
+running_time = end - start
+print('用时: %.3f 秒' % running_time)
+sys.exit()
