@@ -5,9 +5,7 @@ from functools import lru_cache
 
 from bs4 import BeautifulSoup
 from rich.console import Console
-from rich.pretty import pprint
 from rich import print
-from rich.layout import Layout
 import urllib3
 import requests
 import sys
@@ -31,15 +29,18 @@ class WordGeek:
         self.pronounce = ""
         self.change = ""
         self.meaning = ""
-        self.englishMeaning = ""
+        self.wordGroup = ""
 
     def request(self):
         # 发起请求
         urllib3.disable_warnings()  # 忽略证书验证警告
-        response_html = requests.get(url=self.url, headers=self.headers, verify=False, proxies=self.proxy).text
-        soup = BeautifulSoup(response_html, 'html.parser').find('div', {"class": "results-content"})
-        # 获取网页对象
-        return soup
+        try:
+            response_html = requests.get(url=self.url, headers=self.headers, verify=False, proxies=self.proxy).text
+            soup = BeautifulSoup(response_html, 'html.parser').find('div', {"class": "results-content"})
+            return soup
+        except Exception as e:
+            exit("网络异常，请检查网络连接")
+
 
     @lru_cache
     def getKeyWord(self):
@@ -94,19 +95,30 @@ class WordGeek:
                 count += 1
             self.meaning = res.strip()
 
-    def getEnglishMeaning(self):
+    @lru_cache()
+    def getWordGroup(self):
         res = ""
-        phrases = self.soup.find_all('div', {"class": "trans-container"})
+        phrases = self.soup.find_all('div', {"class": "collinsMajorTrans"})
+        l = len(phrases)
+        if l > 0:
+            for s in phrases[0].strings:
+                if s == "":
+                    pass
+                else:
+                    res += s.strip().replace("  ", "") + " "
+        self.wordGroup = res
 
     def threadGet(self):
         t1 = threading.Thread(target=self.getKeyWord())
         t2 = threading.Thread(target=self.getPronounce())
         t3 = threading.Thread(target=self.getChange())
         t4 = threading.Thread(target=self.getMeaning())
+        t5 = threading.Thread(target=self.getWordGroup())
         t1.start()
         t2.start()
         t3.start()
         t4.start()
+        t5.start()
 
 
 class WordGeekChinese:
@@ -131,10 +143,14 @@ class WordGeekChinese:
     def request(self):
         # 发起请求
         urllib3.disable_warnings()  # 忽略证书验证警告
-        response_html = requests.get(url=self.url, headers=self.headers, verify=False, proxies=self.proxy).text
-        soup = BeautifulSoup(response_html, 'html.parser').find('div', {"class": "results-content"})
-        # 获取网页对象
-        return soup
+        try:
+            response_html = requests.get(url=self.url, headers=self.headers, verify=False, proxies=self.proxy).text
+            soup = BeautifulSoup(response_html, 'html.parser').find('div', {"class": "results-content"})
+            # 获取网页对象
+            return soup
+        except Exception as e:
+            print("网络异常")
+
 
     def getKeyWord(self):
         kl = self.soup.find_all('span', {"class": "keyword"})
@@ -190,7 +206,7 @@ class Main:
     @lru_cache
     def getInput(self):
         word = ""
-        if len(sys.argv) > 0:
+        if len(sys.argv) > 1:
             if sys.argv[1] > 'z':
                 self.isChinese = True
             for i in range(1, len(sys.argv)):
@@ -213,6 +229,8 @@ class Main:
             self.console.print(wk.meaning, style="rgb(236,125,225)")
         if wk.change != "":
             self.console.print(wk.change, style="rgb(112,174,255)")
+        if wk.wordGroup != "":
+            self.console.print(wk.wordGroup, style="rgb(105,170,102)")
 
     def printNull(self):
         self.console.print("* 错误：请输入单词或短语", style="rgb(237,247,75)")
